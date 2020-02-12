@@ -12,10 +12,3 @@ def create_app(config_filename):
     app.register_blueprint(mod, url_prefix='/api/v1/')
     
     return app
-
-"""
-from flask import Flask
-app = Flask(__name__)
-from api.routes import mod
-app.register_blueprint(api.routes.mod, url_prefix='/api')
-"""
