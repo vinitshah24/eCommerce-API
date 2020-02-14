@@ -1,14 +1,15 @@
 from flask import Flask
+from api.database import DB
+from api.users.routes import modF
+
 
 def create_app(config_filename):
     app = Flask(__name__)
     app.config.from_object(config_filename)
 
-    from api.users.models import DB
     DB.init_app(app)
 
     # Blueprints
-    from api.users.routes import mod
     app.register_blueprint(mod, url_prefix='/api/v1/')
-    
+
     return app
