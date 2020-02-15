@@ -9,9 +9,9 @@
      CREATE DATABASE flask_rest_db;
      
      Run the following commands to create required tables:
-     python migrate.py db init
-     python migrate.py db migrate
-     python migrate.py db upgrade
+     python manage.py db init
+     python manage.py db migrate
+     python manage.py db upgrade
      
      Run the application:
      python run.py
