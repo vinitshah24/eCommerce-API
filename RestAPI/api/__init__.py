@@ -1,6 +1,6 @@
 from flask import Flask
 from api.database import DB
-from api.users.routes import modF
+from api.users.routes import mod
 
 
 def create_app(config_filename):

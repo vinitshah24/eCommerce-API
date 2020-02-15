@@ -13,6 +13,8 @@ distlib==0.3.0
 dnspython==1.16.0
 filelock==3.0.12
 Flask==1.1.1
+Flask-JWT==0.3.2
+Flask-JWT-Extended==3.24.1
 Flask-Migrate==2.5.2
 Flask-RESTful==0.3.8
 Flask-Script==2.0.6
@@ -30,6 +32,7 @@ mysqlclient==1.4.6
 protobuf==3.6.1
 pycodestyle==2.5.0
 pycparser==2.19
+PyJWT==1.7.1
 pylint==2.4.4
 pylint-flask==0.6
 pylint-flask-sqlalchemy==0.2.0
