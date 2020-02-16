@@ -105,6 +105,17 @@ class UserActions(Resource):
         return make_response(jsonify({'message': 'User deleted successfully'}), 200)
 
 
+class ChangeEmail(Resource):
+    @jwt_required  # Will require accesss token
+    def put(self, email):
+        """ Change Email """
+        public_id = get_jwt_identity()
+        user = User.query.filter_by(public_id=public_id).first()
+        user.email = email
+        DB.session.commit()
+        return make_response(jsonify({'message': 'Email updated successfully'}), 200)
+
+
 class UserLogin(Resource):
     def post(self):
         """ User Login """
@@ -149,6 +160,7 @@ class TokenRefresh(Resource):
 
 api.add_resource(UserList, '/users')
 api.add_resource(UserActions, '/user')
+api.add_resource(ChangeEmail, '/user/<email>')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(TokenRefresh, '/refresh')
