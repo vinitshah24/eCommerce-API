@@ -1,3 +1,5 @@
+""" Routes for user """
+
 import uuid
 from flask import request, jsonify, Blueprint, make_response
 from flask_restful import Api, Resource
@@ -23,6 +25,7 @@ class UserList(Resource):
     @jwt_required  # Will require accesss token
     @jwt_optional  # Using jwt to check public_key for isAdmin value
     def get(self):
+        """Get the list of users"""
         jwt_public_id = get_jwt_identity()
         data = User.query.filter_by(public_id=jwt_public_id).first()
         if data.is_admin == True:
@@ -31,7 +34,10 @@ class UserList(Resource):
             for user in users:
                 user_data = {}
                 user_data['public_id'] = user.public_id
-                user_data['name'] = user.username
+                user_data['first_name'] = user.first_name
+                user_data['last_name'] = user.last_name
+                user_data['email'] = user.email
+                user_data['username'] = user.username
                 # user_data['password'] = user.password
                 user_data['admin'] = user.is_admin
                 output.append(user_data)
@@ -39,12 +45,16 @@ class UserList(Resource):
         return make_response(jsonify({'message': 'Unauthorized request!'}), 401)
 
 
-class UserCreate(Resource):
+class UserActions(Resource):
     def post(self):
+        """ Create a new user """
         data = request.get_json()
         user = User(
             public_id=str(uuid.uuid4()),
-            username=data['name'],
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            username=data['username'],
             password=data['password'],
             is_admin=False
         )
@@ -52,22 +62,29 @@ class UserCreate(Resource):
         DB.session.commit()
         return make_response(jsonify({'message': 'User created successfully!'}), 200)
 
-
-class UserActions(Resource):
     @jwt_required  # Will require accesss token
-    def get(self, public_id):
+    def get(self):
+        """ Get user details """
+        public_id = get_jwt_identity()
+        print(public_id)
         user = User.query.filter_by(public_id=public_id).first()
         if not user:
             return make_response(jsonify({'message': 'User not found!'}), 401)
         user_data = {}
         user_data['public_id'] = user.public_id
-        user_data['name'] = user.username
-        # user_data['password'] = user.password
+        user_data['first_name'] = user.first_name
+        user_data['last_name'] = user.last_name
+        user_data['email'] = user.email
+        user_data['username'] = user.username
         user_data['admin'] = user.is_admin
+        # user_data['password'] = user.password
         return make_response(jsonify({'user': user_data}), 200)
 
     @jwt_required  # Will require accesss token
-    def put(self, public_id):
+    def put(self):
+        """ Escalate user privileges to admin """
+        public_id = get_jwt_identity()
+        print(public_id)
         user = User.query.filter_by(public_id=public_id).first()
         if not user:
             return make_response(jsonify({'message': 'User not found!'}), 401)
@@ -77,7 +94,9 @@ class UserActions(Resource):
 
     # Will require a fresh token [re-login] to ensure the user is authentic
     @fresh_jwt_required
-    def delete(self, public_id):
+    def delete(self):
+        """ Remove a user """
+        public_id = get_jwt_identity()
         user = User.query.filter_by(public_id=public_id).first()
         if not user:
             return make_response(jsonify({'message': 'User not found!'}), 401)
@@ -88,11 +107,12 @@ class UserActions(Resource):
 
 class UserLogin(Resource):
     def post(self):
+        """ User Login """
         json_data = request.get_json()
-        input_user = json_data['name']
+        input_user = json_data['username']
         input_password = json_data['password']
         data = User.query.filter_by(username=input_user).first()
-        if data == None:
+        if data is None:
             return make_response(jsonify({'message': 'Invalid Credentials!'}), 401)
         elif safe_str_cmp(data.username, input_user) and safe_str_cmp(data.password, input_password):
             access_token = create_access_token(
@@ -109,6 +129,7 @@ class UserLogin(Resource):
 class UserLogout(Resource):
     @jwt_required  # Will require accesss token
     def get(self):
+        """ User Logout """
         # JWT ID will be blacklisted once user logout
         jti = get_raw_jwt()['jti']
         BLACKLIST.add(jti)
@@ -118,6 +139,7 @@ class UserLogout(Resource):
 class TokenRefresh(Resource):
     @jwt_refresh_token_required  # Requires refresh token to create new access token
     def get(self):
+        """ Create a new access token """
         current_user = get_jwt_identity()
         # fresh -> False means that token refresh won't work,
         # user has to sign-in using username and password [login]
@@ -126,8 +148,7 @@ class TokenRefresh(Resource):
 
 
 api.add_resource(UserList, '/users')
-api.add_resource(UserCreate, '/user')
-api.add_resource(UserActions, '/user/<public_id>')
+api.add_resource(UserActions, '/user')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(TokenRefresh, '/refresh')

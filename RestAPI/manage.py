@@ -1,3 +1,5 @@
+""" Migrate Script """
+
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from run import app
