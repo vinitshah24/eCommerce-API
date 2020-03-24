@@ -61,7 +61,6 @@ class ProductDetails(Resource):
     def get(self, public_id):
         """ Get Product Details """
         product = Products.query.filter_by(public_id=public_id).first()
-        print(type(product))
         data = {}
         data['public_id'] = product.public_id
         data['name'] = product.name

@@ -14,3 +14,14 @@ WHERE REFERENCED_TABLE_SCHEMA = 'flask_rest_db' AND
     
 SELECT * FROM flask_rest_db.products;
 SELECT (products.cost + 10) FROM flask_rest_db.products;
+
+SELECT * FROM flask_rest_db.orders;
+
+SELECT
+	orders.product_public_id, products.name, products.company, products.cost,
+	orders.user_public_id, users.first_name, users.last_name
+FROM flask_rest_db.orders
+INNER JOIN flask_rest_db.products 
+	ON orders.product_public_id = products.public_id
+INNER JOIN flask_rest_db.users 
+	ON orders.user_public_id = users.public_id;

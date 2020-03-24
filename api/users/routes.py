@@ -14,7 +14,7 @@ from flask_jwt_extended import (
     create_refresh_token,
 )
 from werkzeug.security import safe_str_cmp
-from api.users.models import DB, User
+from api.users.models import DB, Users
 from blacklist import BLACKLIST
 
 users_model = Blueprint('users', __name__)
@@ -27,9 +27,9 @@ class UserList(Resource):
     def get(self):
         """Get the list of users"""
         jwt_public_id = get_jwt_identity()
-        data = User.query.filter_by(public_id=jwt_public_id).first()
+        data = users.query.filter_by(public_id=jwt_public_id).first()
         if data.is_admin == True:
-            users = User.query.all()
+            users = Users.query.all()
             output = []
             for user in users:
                 user_data = {}
@@ -49,7 +49,7 @@ class UserActions(Resource):
     def post(self):
         """ Create a new user """
         data = request.get_json()
-        user = User(
+        user = Users(
             public_id=str(uuid.uuid4()),
             first_name=data['first_name'],
             last_name=data['last_name'],
@@ -67,7 +67,7 @@ class UserActions(Resource):
         """ Get user details """
         public_id = get_jwt_identity()
         print(public_id)
-        user = User.query.filter_by(public_id=public_id).first()
+        user = Users.query.filter_by(public_id=public_id).first()
         if not user:
             return make_response(jsonify({'message': 'User not found!'}), 401)
         user_data = {}
@@ -85,7 +85,7 @@ class UserActions(Resource):
         """ Escalate user privileges to admin """
         public_id = get_jwt_identity()
         print(public_id)
-        user = User.query.filter_by(public_id=public_id).first()
+        user = Users.query.filter_by(public_id=public_id).first()
         if not user:
             return make_response(jsonify({'message': 'User not found!'}), 401)
         user.is_admin = True
@@ -97,7 +97,7 @@ class UserActions(Resource):
     def delete(self):
         """ Remove a user """
         public_id = get_jwt_identity()
-        user = User.query.filter_by(public_id=public_id).first()
+        user = Users.query.filter_by(public_id=public_id).first()
         if not user:
             return make_response(jsonify({'message': 'User not found!'}), 401)
         DB.session.delete(user)
@@ -110,7 +110,7 @@ class ChangeEmail(Resource):
     def put(self, email):
         """ Change Email """
         public_id = get_jwt_identity()
-        user = User.query.filter_by(public_id=public_id).first()
+        user = Users.query.filter_by(public_id=public_id).first()
         user.email = email
         DB.session.commit()
         return make_response(jsonify({'message': 'Email updated successfully'}), 200)
@@ -122,7 +122,7 @@ class UserLogin(Resource):
         json_data = request.get_json()
         input_user = json_data['username']
         input_password = json_data['password']
-        data = User.query.filter_by(username=input_user).first()
+        data = Users.query.filter_by(username=input_user).first()
         if data is None:
             return make_response(jsonify({'message': 'Invalid Credentials!'}), 401)
         elif safe_str_cmp(data.username, input_user) and safe_str_cmp(data.password, input_password):

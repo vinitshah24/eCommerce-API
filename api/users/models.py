@@ -3,7 +3,7 @@
 from api.database import DB
 
 
-class User(DB.Model):
+class Users(DB.Model):
     """ users table """
     __tablename__ = 'users'
     id = DB.Column(DB.Integer, primary_key=True)
