@@ -2,6 +2,7 @@
 
 import uuid
 from flask import request, jsonify, Blueprint, make_response
+from flask import current_app as app
 from flask_restful import Api, Resource
 from flask_jwt_extended import (
     jwt_required,
@@ -15,10 +16,16 @@ from flask_jwt_extended import (
 )
 from werkzeug.security import safe_str_cmp
 from api.users.models import DB, Users
-from blacklist import BLACKLIST
+import api.security.jwt
+from api.security.models import DB, TokenBlacklist
+from api.security.blacklist_helpers import (
+    is_token_revoked, add_token_to_database, get_user_tokens,
+    revoke_token, unrevoke_token,
+    prune_database
+)
 
 users_model = Blueprint('users', __name__)
-api = Api(users_model)
+api_login = Api(users_model)
 
 
 class UserList(Resource):
@@ -27,8 +34,8 @@ class UserList(Resource):
     def get(self):
         """Get the list of users"""
         jwt_public_id = get_jwt_identity()
-        data = users.query.filter_by(public_id=jwt_public_id).first()
-        if data.is_admin == True:
+        data = Users.query.filter_by(public_id=jwt_public_id).first()
+        if data.is_admin:
             users = Users.query.all()
             output = []
             for user in users:
@@ -77,7 +84,6 @@ class UserActions(Resource):
         user_data['email'] = user.email
         user_data['username'] = user.username
         user_data['admin'] = user.is_admin
-        # user_data['password'] = user.password
         return make_response(jsonify({'user': user_data}), 200)
 
     @jwt_required  # Will require accesss token
@@ -129,6 +135,11 @@ class UserLogin(Resource):
             access_token = create_access_token(
                 identity=data.public_id, fresh=True)
             refresh_token = create_refresh_token(data.public_id)
+            # Store the tokens in our store with a status of not currently revoked.
+            add_token_to_database(
+                access_token, app.config['JWT_IDENTITY_CLAIM'])
+            add_token_to_database(
+                refresh_token, app.config['JWT_IDENTITY_CLAIM'])
             return make_response(jsonify({
                 'access token': access_token,
                 'refresh token': refresh_token
@@ -142,9 +153,23 @@ class UserLogout(Resource):
     def get(self):
         """ User Logout """
         # JWT ID will be blacklisted once user logout
-        jti = get_raw_jwt()['jti']
-        BLACKLIST.add(jti)
+        user_identity = get_jwt_identity()
+        all_tokens = get_user_tokens(user_identity)
+        ret = [token.to_dict() for token in all_tokens]
+        print(ret)
+        for r in ret:
+            revoke_token(r['token_id'], user_identity)
+        #revoke_token(token_id, user_identity)
         return make_response(jsonify({'message': 'Logged out successfully!'}), 200)
+
+
+class UserTokens(Resource):
+    @jwt_required
+    def get(self):
+        user_identity = get_jwt_identity()
+        all_tokens = get_user_tokens(user_identity)
+        ret = [token.to_dict() for token in all_tokens]
+        return jsonify(ret), 200
 
 
 class TokenRefresh(Resource):
@@ -155,12 +180,14 @@ class TokenRefresh(Resource):
         # fresh -> False means that token refresh won't work,
         # user has to sign-in using username and password [login]
         new_token = create_access_token(identity=current_user, fresh=False)
+        add_token_to_database(new_token, app.config['JWT_IDENTITY_CLAIM'])
         return make_response(jsonify({'access token': new_token}), 200)
 
 
-api.add_resource(UserList, '/users')
-api.add_resource(UserActions, '/user')
-api.add_resource(ChangeEmail, '/user/<email>')
-api.add_resource(UserLogin, '/login')
-api.add_resource(UserLogout, '/logout')
-api.add_resource(TokenRefresh, '/refresh')
+api_login.add_resource(UserList, '/users')
+api_login.add_resource(UserActions, '/user')
+api_login.add_resource(ChangeEmail, '/user/<email>')
+api_login.add_resource(UserLogin, '/login')
+api_login.add_resource(UserTokens, '/tokens')
+api_login.add_resource(UserLogout, '/logout')
+api_login.add_resource(TokenRefresh, '/refresh')

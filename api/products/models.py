@@ -1,6 +1,6 @@
 """ Model for products table """
 
-from api.database import DB
+from api.extensions import DB
 
 
 class Products(DB.Model):

@@ -1,6 +1,6 @@
 """ Model for orders table """
 
-from api.database import DB
+from api.extensions import DB
 
 
 class Orders(DB.Model):

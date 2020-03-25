@@ -6,6 +6,7 @@ from run import app
 from api.users.models import DB
 from api.products.models import DB
 from api.orders.models import DB
+from api.security.models import DB
 
 migrate = Migrate(app, DB)
 manager = Manager(app)

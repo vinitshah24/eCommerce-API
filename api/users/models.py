@@ -1,6 +1,6 @@
 """ Model for users table """
 
-from api.database import DB
+from api.extensions import DB
 
 
 class Users(DB.Model):

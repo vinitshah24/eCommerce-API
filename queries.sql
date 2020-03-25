@@ -1,9 +1,9 @@
 DROP DATABASE IF EXISTS flask_rest_db;
 CREATE DATABASE flask_rest_db;
 
-DESCRIBE flask_rest_db.users;
-DESCRIBE flask_rest_db.products;
-DESCRIBE flask_rest_db.orders;
+-- DESCRIBE flask_rest_db.users;
+-- DESCRIBE flask_rest_db.products;
+-- DESCRIBE flask_rest_db.orders;
 
 SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, 
 	REFERENCED_TABLE_NAME,
