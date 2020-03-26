@@ -25,3 +25,6 @@ INNER JOIN flask_rest_db.products
 	ON orders.product_public_id = products.public_id
 INNER JOIN flask_rest_db.users 
 	ON orders.user_public_id = users.public_id;
+
+SELECT * FROM flask_rest_db.users;
+SELECT * FROM flask_rest_db.token_blacklist;
